@@ -1,3 +1,7 @@
+if (~exist('train_data_cropped'))
+    load rit18-training.mat
+end
+
 train_data_cropped_eq = train_data_cropped;
 
 % Apply histogram equalization.
@@ -26,7 +30,7 @@ train_cropped_classes(train_labels_cropped ~= 2 & ...
     train_labels_cropped ~= 16 & train_labels_cropped ~= 17 & ...
     train_labels_cropped ~= 18) = 0;
 
-plot_path = 0;
+plot_path = 1;
 
 % Orthomosaic dimensions.
 dim_y = size(train_data_cropped_eq,1);
@@ -36,20 +40,20 @@ dim_x = size(train_data_cropped_eq,2);
 FoV_hor = 47.2;
 FoV_ver = 35.4;
 % Ground sample distance [m/pixel].
-GSD = 0.0047;
+GSD = 0.047;
 
 % Altitude from which to simulate images [m].
-altitude = 10;
+altitude = 25;
 
 % Overlap between images [%].
-overlap_per = 0.67;
+overlap_per = 0.1;
 
 % Name of images.
-image_name = 'image';
+image_name = '0image';
 
 % Compute camera footprint [pixels].
-image_size.y = round(altitude*tand(FoV_hor/2) / GSD);
-image_size.x = round(altitude*tand(FoV_ver/2) / GSD);
+image_size.y = round((2*altitude*tand(FoV_hor/2)) / GSD);
+image_size.x = round((2*altitude*tand(FoV_ver/2)) / GSD);
 
 % Create (deterministic) coverage path for data collection at altitude.
 % Set starting point.
@@ -139,7 +143,7 @@ for j = 1:size(path,1)
         num2str(j,'%04d'), '.png']));
    
     % Crop ground truth image corresponding to the measurement position.
-    image = train_labels_cropped(dim_y-path(j,1)-image_size.y/2: ...
+    image = train_cropped_classes(dim_y-path(j,1)-image_size.y/2: ...
         dim_y-path(j,1)+image_size.y/2, ...
         path(j,2)-image_size.x/2:path(j,2)+image_size.x/2);
     image = imresize(image, [480, 360], 'nearest');
