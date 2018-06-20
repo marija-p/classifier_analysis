@@ -1,40 +1,40 @@
 if (~exist('train_data_cropped'))
-    load rit18-training.mat
+    load rit18-train.mat
 end
 
-train_data_cropped_eq = train_data_cropped;
+data_cropped = train_data_cropped;
+labels_cropped = train_labels_cropped;
 
 % Apply histogram equalization.
-train_data_cropped_eq(:,:,1) = histeq(train_data_cropped_eq(:,:,1));
-train_data_cropped_eq(:,:,2) = histeq(train_data_cropped_eq(:,:,2));
-train_data_cropped_eq(:,:,3) = histeq(train_data_cropped_eq(:,:,3));
-train_data_cropped_eq(:,:,4:6) = histeq(train_data_cropped_eq(:,:,4:6));
+data_cropped_eq(:,:,1) = histeq(data_cropped(:,:,1));
+data_cropped_eq(:,:,2) = histeq(data_cropped(:,:,2));
+data_cropped_eq(:,:,3) = histeq(data_cropped(:,:,3));
+data_cropped_eq(:,:,4:6) = histeq(data_cropped(:,:,4:6));
 
 % Simplify the training labels.
-train_cropped_classes = train_labels_cropped;
+cropped_classes = labels_cropped;
 % Vegetation.
-train_cropped_classes(train_labels_cropped == 2 | ...
-    train_labels_cropped == 13 | train_labels_cropped == 14) = 1;
+cropped_classes(labels_cropped == 2 | labels_cropped == 13 | ...
+    labels_cropped == 14) = 1;
 % Water.
-train_cropped_classes(train_labels_cropped == 16 | ...
-    train_labels_cropped == 17) = 2;
+cropped_classes(labels_cropped == 16 | labels_cropped == 17) = 2;
 % Asphalt.
-train_cropped_classes(train_labels_cropped == 18) = 3;
+cropped_classes(labels_cropped == 18) = 3;
 
 % Everything else.
-% train_cropped_classes(train_labels_cropped ~= 2 & ...
-%     train_labels_cropped ~= 13 & train_labels_cropped ~= 14 & ...
-%     train_labels_cropped ~= 16 & train_labels_cropped ~= 17) = 0;
-train_cropped_classes(train_labels_cropped ~= 2 & ...
-    train_labels_cropped ~= 13 & train_labels_cropped ~= 14 & ...
-    train_labels_cropped ~= 16 & train_labels_cropped ~= 17 & ...
-    train_labels_cropped ~= 18) = 0;
+% cropped_classes(labels_cropped ~= 2 & ...
+%     labels_cropped ~= 13 & labels_cropped ~= 14 & ...
+%     labels_cropped ~= 16 & labels_cropped ~= 17) = 0;
+cropped_classes(labels_cropped ~= 2 & ...
+    labels_cropped ~= 13 & labels_cropped ~= 14 & ...
+    labels_cropped ~= 16 & labels_cropped ~= 17 & ...
+    labels_cropped ~= 18) = 0;
 
 plot_path = 1;
 
 % Orthomosaic dimensions.
-dim_y = size(train_data_cropped_eq,1);
-dim_x = size(train_data_cropped_eq,2);
+dim_y = size(data_cropped_eq,1);
+dim_x = size(data_cropped_eq,2);
 
 % Camera FoV angles [deg].
 FoV_hor = 47.2;
@@ -43,13 +43,15 @@ FoV_ver = 35.4;
 GSD = 0.047;
 
 % Altitude from which to simulate images [m].
-altitude = 25;
+altitude = 150;
 
 % Overlap between images [%].
-overlap_per = 0.1;
+overlap_per = 0.9;
 
 % Name of images.
-image_name = '0image';
+image_name = 'image';
+% Offset in image numbers.
+image_number_offset = 0;
 
 % Compute camera footprint [pixels].
 image_size.y = round((2*altitude*tand(FoV_hor/2)) / GSD);
@@ -57,7 +59,7 @@ image_size.x = round((2*altitude*tand(FoV_ver/2)) / GSD);
 
 % Create (deterministic) coverage path for data collection at altitude.
 % Set starting point.
-point = [10+image_size.y/2, 1+image_size.x/2];
+point = [1+image_size.y/2, 1+image_size.x/2];
 path = point;
 i = 0;
 
@@ -93,7 +95,7 @@ path = path(1:end-1, :);
 if (plot_path)
     figure;
     hold on
-    imagesc(histeq(train_data_cropped_eq(:,:,4:6)));
+    imagesc(histeq(data_cropped_eq(:,:,4:6)));
     plot(path(:,2), path(:,1), '-o', 'MarkerFaceColor',[1 .6 .6], ...
         'LineWidth', 1);
     set(gca,'xtick',[]);
@@ -104,51 +106,53 @@ end
 
 disp(['Number of images: ', num2str(size(path,1))]);
 
+%return;
+
 for j = 1:size(path,1)
 
     % Crop IR1 image channel corresponding to the measurement position.
-    image = train_data_cropped_eq(dim_y-path(j,1)-image_size.y/2: ...
+    image = data_cropped_eq(dim_y-path(j,1)-image_size.y/2: ...
         dim_y-path(j,1)+image_size.y/2, ...
         path(j,2)-image_size.x/2:path(j,2)+image_size.x/2, 1);
     image = imresize(image, [480, 360], 'nearest');
     image = imrotate(image, 90);
-    imwrite(image, fullfile([pwd, '/images_ir1/', image_name ...
-        num2str(j,'%04d'), '.png']));
+    imwrite(image, fullfile([pwd, '/trainir1/', image_name, 'ir1', ...
+        num2str(j+image_number_offset,'%04d'), '.png']));
 
     % Crop IR2 image channel corresponding to the measurement position.
-    image = train_data_cropped_eq(dim_y-path(j,1)-image_size.y/2: ...
+    image = data_cropped_eq(dim_y-path(j,1)-image_size.y/2: ...
         dim_y-path(j,1)+image_size.y/2, ...
         path(j,2)-image_size.x/2:path(j,2)+image_size.x/2, 2);
     image = imresize(image, [480, 360], 'nearest');
     image = imrotate(image, 90);
-    imwrite(image, fullfile([pwd, '/images_ir2/', image_name, ...
-        num2str(j,'%04d'), '.png']));
+    imwrite(image, fullfile([pwd, '/trainir2/', image_name, 'ir2', ...
+        num2str(j+image_number_offset,'%04d'), '.png']));
   
     % Crop IR3 image channel corresponding to the measurement position.
-    image = train_data_cropped_eq(dim_y-path(j,1)-image_size.y/2: ...
+    image = data_cropped_eq(dim_y-path(j,1)-image_size.y/2: ...
         dim_y-path(j,1)+image_size.y/2, ...
         path(j,2)-image_size.x/2:path(j,2)+image_size.x/2, 3);
     image = imresize(image, [480, 360], 'nearest');
     image = imrotate(image, 90);
-    imwrite(image, fullfile([pwd, '/images_ir3/', image_name, ...
-        num2str(j,'%04d'), '.png']));
+    imwrite(image, fullfile([pwd, '/trainir3/', image_name, 'ir3', ...
+        num2str(j+image_number_offset,'%04d'), '.png']));
     
     % Crop RGB image channel corresponding to the measurement position.
-    image = train_data_cropped_eq(dim_y-path(j,1)-image_size.y/2: ...
+    image = data_cropped_eq(dim_y-path(j,1)-image_size.y/2: ...
         dim_y-path(j,1)+image_size.y/2, ...
         path(j,2)-image_size.x/2:path(j,2)+image_size.x/2, 4:6);
     image = imresize(image, [480, 360], 'nearest');
     image = imrotate(image, 90);
-    imwrite(image, fullfile([pwd, '/images_rgb/', image_name, ...
-        num2str(j,'%04d'), '.png']));
+    imwrite(image, fullfile([pwd, '/train/', image_name, ...
+        num2str(j+image_number_offset,'%04d'), '.png']));
    
     % Crop ground truth image corresponding to the measurement position.
-    image = train_cropped_classes(dim_y-path(j,1)-image_size.y/2: ...
+    image = labels_cropped(dim_y-path(j,1)-image_size.y/2: ...
         dim_y-path(j,1)+image_size.y/2, ...
         path(j,2)-image_size.x/2:path(j,2)+image_size.x/2);
     image = imresize(image, [480, 360], 'nearest');
     image = imrotate(image, 90);
-    imwrite(image, fullfile([pwd, '/images_annot/', image_name, ...
-        num2str(j,'%04d'), '.png']));
+    imwrite(image, fullfile([pwd, '/trainannot/', image_name, 'annot', ...
+        num2str(j+image_number_offset,'%04d'), '.png']));
     
 end
