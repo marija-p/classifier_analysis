@@ -1,6 +1,6 @@
-rm -rf images_rgb/* &&
-rm -rf images_ir1/* &&
-rm -rf images_ir2/* &&
-rm -rf images_ir3/* &&
-rm -rf images_annot/*
+rm -rf train/* &&
+rm -rf trainir1/* &&
+rm -rf trainir2/* &&
+rm -rf trainir3/* &&
+rm -rf trainannot/*
 

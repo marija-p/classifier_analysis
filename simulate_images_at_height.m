@@ -1,9 +1,20 @@
-if (~exist('train_data_cropped'))
-    load rit18-train.mat
-end
+close all;
 
-data_cropped = train_data_cropped;
-labels_cropped = train_labels_cropped;
+dataset = 'val';
+
+if strcmp(dataset, 'train')
+    if (~exist('train_data_cropped'))
+        load rit18-train.mat
+    end
+    data_cropped = train_data_cropped;
+    labels_cropped = train_labels_cropped;
+else
+    if (~exist('val_data_cropped'))
+        load rit18-val.mat
+    end
+    data_cropped = val_data_cropped;
+    labels_cropped = val_labels_cropped;
+end
 
 % Apply histogram equalization.
 data_cropped_eq(:,:,1) = histeq(data_cropped(:,:,1));
@@ -12,25 +23,25 @@ data_cropped_eq(:,:,3) = histeq(data_cropped(:,:,3));
 data_cropped_eq(:,:,4:6) = histeq(data_cropped(:,:,4:6));
 
 % Simplify the training labels.
-cropped_classes = labels_cropped;
+classes_cropped = labels_cropped;
 % Vegetation.
-cropped_classes(labels_cropped == 2 | labels_cropped == 13 | ...
+classes_cropped(labels_cropped == 2 | labels_cropped == 13 | ...
     labels_cropped == 14) = 1;
 % Water.
-cropped_classes(labels_cropped == 16 | labels_cropped == 17) = 2;
+classes_cropped(labels_cropped == 16 | labels_cropped == 17) = 2;
 % Asphalt.
-cropped_classes(labels_cropped == 18) = 3;
+classes_cropped(labels_cropped == 18) = 3;
 
 % Everything else.
 % cropped_classes(labels_cropped ~= 2 & ...
 %     labels_cropped ~= 13 & labels_cropped ~= 14 & ...
 %     labels_cropped ~= 16 & labels_cropped ~= 17) = 0;
-cropped_classes(labels_cropped ~= 2 & ...
+classes_cropped(labels_cropped ~= 2 & ...
     labels_cropped ~= 13 & labels_cropped ~= 14 & ...
     labels_cropped ~= 16 & labels_cropped ~= 17 & ...
     labels_cropped ~= 18) = 0;
 
-plot_path = 1;
+plot_path = 0;
 
 % Orthomosaic dimensions.
 dim_y = size(data_cropped_eq,1);
@@ -43,10 +54,10 @@ FoV_ver = 35.4;
 GSD = 0.047;
 
 % Altitude from which to simulate images [m].
-altitude = 150;
+altitude = 100;
 
 % Overlap between images [%].
-overlap_per = 0.9;
+overlap_per = 0.6;
 
 % Name of images.
 image_name = 'image';
