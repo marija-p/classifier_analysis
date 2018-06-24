@@ -50,6 +50,12 @@ dim_x = size(data_cropped_eq,2);
 % Camera FoV angles [deg].
 FoV_hor = 47.2;
 FoV_ver = 35.4;
+% Camera resolution to downsample to [pixels].
+down_res_hor = 480;
+down_res_ver = 360;
+% Camera resolution [pixels].
+res_hor = 480;
+res_ver = 360;
 % Ground sample distance [m/pixel].
 GSD = 0.047;
 
@@ -125,7 +131,8 @@ for j = 1:size(path,1)
     image = data_cropped_eq(dim_y-path(j,1)-image_size.y/2: ...
         dim_y-path(j,1)+image_size.y/2, ...
         path(j,2)-image_size.x/2:path(j,2)+image_size.x/2, 1);
-    image = imresize(image, [480, 360], 'nearest');
+    image = imresize(image, [down_res_hor, down_res_ver], 'nearest');
+    image = imresize(image, [res_hor, res_ver], 'nearest');
     image = imrotate(image, 90);
     imwrite(image, fullfile([pwd, '/trainir1/', image_name, 'ir1', ...
         num2str(j+image_number_offset,'%04d'), '.png']));
@@ -134,7 +141,8 @@ for j = 1:size(path,1)
     image = data_cropped_eq(dim_y-path(j,1)-image_size.y/2: ...
         dim_y-path(j,1)+image_size.y/2, ...
         path(j,2)-image_size.x/2:path(j,2)+image_size.x/2, 2);
-    image = imresize(image, [480, 360], 'nearest');
+    image = imresize(image, [down_res_hor, down_res_ver], 'nearest');
+    image = imresize(image, [res_hor, res_ver], 'nearest');
     image = imrotate(image, 90);
     imwrite(image, fullfile([pwd, '/trainir2/', image_name, 'ir2', ...
         num2str(j+image_number_offset,'%04d'), '.png']));
@@ -143,7 +151,8 @@ for j = 1:size(path,1)
     image = data_cropped_eq(dim_y-path(j,1)-image_size.y/2: ...
         dim_y-path(j,1)+image_size.y/2, ...
         path(j,2)-image_size.x/2:path(j,2)+image_size.x/2, 3);
-    image = imresize(image, [480, 360], 'nearest');
+    image = imresize(image, [down_res_hor, down_res_ver], 'nearest');
+    image = imresize(image, [res_hor, res_ver], 'nearest');
     image = imrotate(image, 90);
     imwrite(image, fullfile([pwd, '/trainir3/', image_name, 'ir3', ...
         num2str(j+image_number_offset,'%04d'), '.png']));
@@ -152,16 +161,18 @@ for j = 1:size(path,1)
     image = data_cropped_eq(dim_y-path(j,1)-image_size.y/2: ...
         dim_y-path(j,1)+image_size.y/2, ...
         path(j,2)-image_size.x/2:path(j,2)+image_size.x/2, 4:6);
-    image = imresize(image, [480, 360], 'nearest');
+    image = imresize(image, [down_res_hor, down_res_ver], 'nearest');
+    image = imresize(image, [res_hor, res_ver], 'nearest');
     image = imrotate(image, 90);
     imwrite(image, fullfile([pwd, '/train/', image_name, ...
         num2str(j+image_number_offset,'%04d'), '.png']));
-   
+    
     % Crop ground truth image corresponding to the measurement position.
     image = labels_cropped(dim_y-path(j,1)-image_size.y/2: ...
         dim_y-path(j,1)+image_size.y/2, ...
         path(j,2)-image_size.x/2:path(j,2)+image_size.x/2);
-    image = imresize(image, [480, 360], 'nearest');
+    image = imresize(image, [down_res_hor, down_res_ver], 'nearest');
+    image = imresize(image, [res_hor, res_ver], 'nearest');
     image = imrotate(image, 90);
     imwrite(image, fullfile([pwd, '/trainannot/', image_name, 'annot', ...
         num2str(j+image_number_offset,'%04d'), '.png']));
